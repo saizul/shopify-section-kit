@@ -1,0 +1,48 @@
+{
+  "general": {
+    "page": "Page {{ page }}"
+  },
+  "products": {
+    "product": {
+      "add_to_cart": "Add to cart"
+    },
+    "whatsapp": {
+      "button": "Order on WhatsApp",
+      "message": "Hello, I want to order:\n{product} {variant}\nPrice: {price}\n{url}"
+    },
+    "size_guide": {
+      "title": "Size guide",
+      "button": "Size guide",
+      "close": "Close size guide"
+    }
+  },
+  "sections": {
+    "hero": {
+      "pause_video": "Pause background video",
+      "play_video": "Play background video"
+    },
+    "usp": {
+      "label": "Store benefits"
+    },
+    "comparison": {
+      "no_product": "Select a product",
+      "price": "Price",
+      "availability": "Availability",
+      "in_stock": "In stock",
+      "sold_out": "Sold out"
+    },
+    "countdown": {
+      "label": "Announcement",
+      "days": "d",
+      "hours": "h",
+      "minutes": "m",
+      "seconds": "s",
+      "dismiss": "Dismiss announcement"
+    },
+    "testimonials": {
+      "previous": "Previous testimonial",
+      "next": "Next testimonial",
+      "rating": "Rated {{ rating }} out of 5"
+    }
+  }
+}

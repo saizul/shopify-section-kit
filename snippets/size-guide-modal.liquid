@@ -1,0 +1,73 @@
+{%- comment -%}
+  Size guide button + accessible modal (native <dialog>).
+  Accepts:
+  - page: a page object whose content holds the size chart (e.g. pages['size-guide'])
+  - content: optional raw HTML used when no page is given
+  - title: modal title (optional)
+  - button_label: trigger label (optional)
+  - modal_id: unique DOM id, needed only when rendering more than one modal per page
+  Usage: {% render 'size-guide-modal', page: pages['size-guide'] %}
+{%- endcomment -%}
+{%- liquid
+  assign sg_content = content
+  assign sg_title = title
+  if page != blank and page.content != blank
+    assign sg_content = page.content
+    assign sg_title = sg_title | default: page.title
+  endif
+  assign sg_title = sg_title | default: 'products.size_guide.title' | t
+  assign sg_label = button_label | default: 'products.size_guide.button' | t
+  assign sg_id = modal_id | default: 'sk-size-guide'
+-%}
+
+{%- if sg_content != blank -%}
+  <button type="button" class="sk-size-guide__trigger" data-sk-size-guide-open="{{ sg_id }}" aria-haspopup="dialog">
+    {{ sg_label | escape }}
+  </button>
+
+  <dialog id="{{ sg_id }}" class="sk-size-guide" aria-labelledby="{{ sg_id }}-title" data-sk-size-guide>
+    <div class="sk-size-guide__panel">
+      <div class="sk-size-guide__head">
+        <h2 id="{{ sg_id }}-title" class="sk-size-guide__title">{{ sg_title | escape }}</h2>
+        <button type="button" class="sk-size-guide__close" data-sk-size-guide-close aria-label="{{ 'products.size_guide.close' | t }}">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="sk-size-guide__body rte">{{ sg_content }}</div>
+    </div>
+  </dialog>
+{%- endif -%}
+
+{% stylesheet %}
+  .sk-size-guide__trigger { display: inline-flex; align-items: center; min-height: 44px; padding: .4rem 0; background: none; border: 0; color: inherit; font: inherit; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+  .sk-size-guide__trigger:focus-visible, .sk-size-guide__close:focus-visible { outline: 3px solid #111; outline-offset: 2px; }
+  .sk-size-guide { width: min(40rem, calc(100% - 1.5rem)); max-height: 85vh; padding: 0; border: 0; border-radius: 8px; box-shadow: 0 10px 40px rgba(0, 0, 0, .3); }
+  .sk-size-guide::backdrop { background: rgba(0, 0, 0, .55); }
+  .sk-size-guide__panel { padding: 1.25rem; }
+  .sk-size-guide__head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; }
+  .sk-size-guide__title { margin: 0; font-size: 1.25rem; }
+  .sk-size-guide__close { width: 44px; height: 44px; background: none; border: 0; font-size: 1.75rem; line-height: 1; cursor: pointer; }
+  .sk-size-guide__body { overflow-x: auto; }
+  .sk-size-guide__body table { width: 100%; border-collapse: collapse; }
+  .sk-size-guide__body th, .sk-size-guide__body td { padding: .5rem; border: 1px solid rgba(0, 0, 0, .15); text-align: center; }
+{% endstylesheet %}
+
+{% javascript %}
+  (function () {
+    document.addEventListener('click', function (e) {
+      var opener = e.target.closest('[data-sk-size-guide-open]');
+      if (opener) {
+        var dialog = document.getElementById(opener.dataset.skSizeGuideOpen);
+        if (dialog && typeof dialog.showModal === 'function') dialog.showModal();
+        return;
+      }
+      if (e.target.closest('[data-sk-size-guide-close]')) {
+        var parent = e.target.closest('dialog');
+        if (parent) parent.close();
+        return;
+      }
+      /* Click on the backdrop closes the dialog. */
+      if (e.target.matches && e.target.matches('dialog[data-sk-size-guide]')) e.target.close();
+    });
+  })();
+{% endjavascript %}

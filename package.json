@@ -1,0 +1,17 @@
+{
+  "name": "shopify-section-kit",
+  "version": "1.0.0",
+  "description": "Reusable Shopify Online Store 2.0 sections and snippets: hero, USP bar, FAQ, trust badges, comparison, countdown, testimonials, size guide, WhatsApp order button.",
+  "private": true,
+  "license": "MIT",
+  "author": "Saizul Amin (https://saizul.com)",
+  "type": "module",
+  "scripts": {
+    "check": "node scripts/theme-check.mjs",
+    "dev": "shopify theme dev"
+  },
+  "devDependencies": {
+    "@shopify/theme-check-node": "^4.0.0"
+  },
+  "engines": { "node": ">=20" }
+}

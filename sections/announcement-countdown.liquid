@@ -1,0 +1,167 @@
+{%- liquid
+  assign end_at = section.settings.end_at | strip
+  assign bar_id = 'sk-countdown-' | append: section.id
+-%}
+
+<div
+  id="{{ bar_id }}"
+  class="sk-countdown"
+  role="region"
+  aria-label="{{ 'sections.countdown.label' | t }}"
+  style="--sk-cd-bg: {{ section.settings.background }}; --sk-cd-text: {{ section.settings.text_color }};"
+  data-sk-countdown
+  data-end="{{ end_at | escape }}"
+  data-timezone="{{ section.settings.timezone }}"
+  data-hide-on-expiry="{{ section.settings.hide_when_expired }}"
+  data-expired-text="{{ section.settings.expired_text | escape }}"
+  data-dismissible="{{ section.settings.dismissible }}"
+  data-storage-key="{{ bar_id }}-{{ end_at | handleize }}"
+>
+  <div class="sk-countdown__inner">
+    <p class="sk-countdown__text" data-sk-countdown-text>
+      {%- if section.settings.link != blank -%}
+        <a href="{{ section.settings.link }}">{{ section.settings.text | escape }}</a>
+      {%- else -%}
+        {{ section.settings.text | escape }}
+      {%- endif -%}
+    </p>
+    {%- if end_at != blank -%}
+      <p class="sk-countdown__timer" role="timer" aria-live="off" data-sk-countdown-timer hidden>
+        <span><b data-unit="d">0</b> {{ 'sections.countdown.days' | t }}</span>
+        <span><b data-unit="h">00</b> {{ 'sections.countdown.hours' | t }}</span>
+        <span><b data-unit="m">00</b> {{ 'sections.countdown.minutes' | t }}</span>
+        <span><b data-unit="s">00</b> {{ 'sections.countdown.seconds' | t }}</span>
+      </p>
+    {%- endif -%}
+    {%- if section.settings.dismissible -%}
+      <button type="button" class="sk-countdown__close" data-sk-countdown-close aria-label="{{ 'sections.countdown.dismiss' | t }}" hidden>
+        <span aria-hidden="true">&times;</span>
+      </button>
+    {%- endif -%}
+  </div>
+</div>
+
+{% stylesheet %}
+  .sk-countdown { background: var(--sk-cd-bg, #111); color: var(--sk-cd-text, #fff); }
+  .sk-countdown[hidden] { display: none; }
+  .sk-countdown__inner { position: relative; display: flex; flex-wrap: wrap; gap: .25rem 1rem; align-items: center; justify-content: center; padding: .6rem 3rem .6rem 1rem; text-align: center; font-size: .9rem; }
+  .sk-countdown__text, .sk-countdown__timer { margin: 0; }
+  .sk-countdown a { color: inherit; text-underline-offset: 3px; }
+  .sk-countdown__timer { display: flex; gap: .6rem; font-variant-numeric: tabular-nums; }
+  .sk-countdown__timer[hidden] { display: none; }
+  .sk-countdown__close { position: absolute; inset-inline-end: .25rem; top: 50%; transform: translateY(-50%); width: 44px; height: 44px; background: none; border: 0; color: inherit; font-size: 1.5rem; cursor: pointer; }
+  .sk-countdown__close[hidden] { display: none; }
+  .sk-countdown__close:focus-visible, .sk-countdown a:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+{% endstylesheet %}
+
+{% javascript %}
+  (function () {
+    /* Offset (in ms) of an IANA time zone from UTC at a given instant. */
+    function zoneOffset(timeZone, ts) {
+      var parts = new Intl.DateTimeFormat('en-US', {
+        timeZone: timeZone, hourCycle: 'h23',
+        year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit', second: '2-digit'
+      }).formatToParts(new Date(ts));
+      var v = {};
+      parts.forEach(function (p) { v[p.type] = parseInt(p.value, 10); });
+      var asUtc = Date.UTC(v.year, v.month - 1, v.day, v.hour, v.minute, v.second);
+      return asUtc - Math.floor(ts / 1000) * 1000;
+    }
+
+    /* Converts "YYYY-MM-DD HH:MM" written in `timeZone` to a UTC timestamp. */
+    function toTimestamp(text, timeZone) {
+      var m = /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})$/.exec(text);
+      if (!m) return NaN;
+      var guess = Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5]);
+      if (timeZone === 'UTC') return guess;
+      var ts = guess - zoneOffset(timeZone, guess);
+      return guess - zoneOffset(timeZone, ts);
+    }
+
+    function pad(n) { return n < 10 ? '0' + n : String(n); }
+
+    document.querySelectorAll('[data-sk-countdown]').forEach(function (bar) {
+      var key = bar.dataset.storageKey;
+      var close = bar.querySelector('[data-sk-countdown-close]');
+      var timer = bar.querySelector('[data-sk-countdown-timer]');
+      var text = bar.querySelector('[data-sk-countdown-text]');
+
+      try {
+        if (bar.dataset.dismissible === 'true' && window.localStorage.getItem(key) === '1') {
+          bar.hidden = true;
+          return;
+        }
+      } catch (e) { /* storage unavailable */ }
+
+      if (close) {
+        close.hidden = false;
+        close.addEventListener('click', function () {
+          bar.hidden = true;
+          try { window.localStorage.setItem(key, '1'); } catch (e) { /* ignore */ }
+        });
+      }
+
+      if (!bar.dataset.end || !timer) return;
+      var target = toTimestamp(bar.dataset.end, bar.dataset.timezone || 'UTC');
+      if (isNaN(target)) return;
+      var interval;
+
+      function tick() {
+        var left = Math.floor((target - Date.now()) / 1000);
+        if (left <= 0) {
+          window.clearInterval(interval);
+          timer.hidden = true;
+          if (bar.dataset.hideOnExpiry === 'true') {
+            bar.hidden = true;
+          } else if (bar.dataset.expiredText) {
+            text.textContent = bar.dataset.expiredText;
+          }
+          return;
+        }
+        timer.hidden = false;
+        timer.querySelector('[data-unit="d"]').textContent = Math.floor(left / 86400);
+        timer.querySelector('[data-unit="h"]').textContent = pad(Math.floor((left % 86400) / 3600));
+        timer.querySelector('[data-unit="m"]').textContent = pad(Math.floor((left % 3600) / 60));
+        timer.querySelector('[data-unit="s"]').textContent = pad(left % 60);
+      }
+
+      tick();
+      interval = window.setInterval(tick, 1000);
+    });
+  })();
+{% endjavascript %}
+
+{% schema %}
+{
+  "name": "Countdown bar",
+  "tag": "section",
+  "class": "sk-section",
+  "settings": [
+    { "type": "text", "id": "text", "label": "Announcement", "default": "Eid sale ends soon: up to 30% off" },
+    { "type": "url", "id": "link", "label": "Link" },
+    { "type": "header", "content": "Countdown" },
+    { "type": "text", "id": "end_at", "label": "Ends at (YYYY-MM-DD HH:MM)", "default": "2027-03-01 23:59", "info": "Written in the time zone selected below. Leave blank for a plain announcement bar." },
+    { "type": "select", "id": "timezone", "label": "Time zone", "options": [
+      { "value": "Asia/Dhaka", "label": "Bangladesh (Asia/Dhaka, UTC+6)" },
+      { "value": "Asia/Kolkata", "label": "India (Asia/Kolkata)" },
+      { "value": "Asia/Karachi", "label": "Pakistan (Asia/Karachi)" },
+      { "value": "Asia/Dubai", "label": "UAE (Asia/Dubai)" },
+      { "value": "Asia/Singapore", "label": "Singapore (Asia/Singapore)" },
+      { "value": "Europe/London", "label": "London (Europe/London)" },
+      { "value": "America/New_York", "label": "New York (America/New_York)" },
+      { "value": "America/Los_Angeles", "label": "Los Angeles (America/Los_Angeles)" },
+      { "value": "UTC", "label": "UTC" }
+    ], "default": "Asia/Dhaka" },
+    { "type": "checkbox", "id": "hide_when_expired", "label": "Hide the bar when the countdown ends", "default": true },
+    { "type": "text", "id": "expired_text", "label": "Text after the countdown ends", "info": "Used when the bar is not hidden." },
+    { "type": "header", "content": "Style" },
+    { "type": "color", "id": "background", "label": "Background", "default": "#111111" },
+    { "type": "color", "id": "text_color", "label": "Text color", "default": "#ffffff" },
+    { "type": "checkbox", "id": "dismissible", "label": "Allow visitors to dismiss", "default": false }
+  ],
+  "presets": [
+    { "name": "Countdown bar" }
+  ]
+}
+{% endschema %}

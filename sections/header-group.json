@@ -1,0 +1,8 @@
+{
+  "name": "Header group",
+  "type": "header",
+  "sections": {
+    "countdown": { "type": "announcement-countdown", "settings": {} }
+  },
+  "order": ["countdown"]
+}

@@ -1,0 +1,140 @@
+{%- liquid
+  assign product_blocks = section.blocks | where: 'type', 'product'
+  assign row_blocks = section.blocks | where: 'type', 'row'
+-%}
+
+<section class="sk-compare page-width">
+  {%- if section.settings.heading != blank -%}
+    <h2 class="sk-compare__heading" id="sk-compare-{{ section.id }}">{{ section.settings.heading | escape }}</h2>
+  {%- endif -%}
+
+  {%- if product_blocks.size > 0 -%}
+    <div class="sk-compare__scroll" role="region" tabindex="0" aria-labelledby="sk-compare-{{ section.id }}">
+      <table class="sk-compare__table">
+        <caption class="visually-hidden">{{ section.settings.heading | escape }}</caption>
+        <thead>
+          <tr>
+            <td class="sk-compare__corner"></td>
+            {%- for block in product_blocks -%}
+              {%- assign p = block.settings.product -%}
+              <th scope="col" class="sk-compare__col{% if block.settings.highlight %} is-highlight{% endif %}" {{ block.shopify_attributes }}>
+                {%- if block.settings.badge != blank -%}
+                  <span class="sk-compare__badge">{{ block.settings.badge | escape }}</span>
+                {%- endif -%}
+                {%- if p != blank -%}
+                  {%- if p.featured_image != blank -%}
+                    {{ p.featured_image | image_url: width: 300 | image_tag: loading: 'lazy', widths: '150, 300', sizes: '150px', class: 'sk-compare__img' }}
+                  {%- endif -%}
+                  <a href="{{ p.url }}">{{ p.title | escape }}</a>
+                {%- else -%}
+                  {{ 'sections.comparison.no_product' | t }}
+                {%- endif -%}
+              </th>
+            {%- endfor -%}
+          </tr>
+        </thead>
+        <tbody>
+          {%- if section.settings.show_price -%}
+            <tr>
+              <th scope="row">{{ 'sections.comparison.price' | t }}</th>
+              {%- for block in product_blocks -%}
+                <td>{% if block.settings.product != blank %}{{ block.settings.product.price | money }}{% endif %}</td>
+              {%- endfor -%}
+            </tr>
+          {%- endif -%}
+          {%- if section.settings.show_availability -%}
+            <tr>
+              <th scope="row">{{ 'sections.comparison.availability' | t }}</th>
+              {%- for block in product_blocks -%}
+                <td>
+                  {%- if block.settings.product != blank -%}
+                    {%- if block.settings.product.available -%}
+                      {{ 'sections.comparison.in_stock' | t }}
+                    {%- else -%}
+                      {{ 'sections.comparison.sold_out' | t }}
+                    {%- endif -%}
+                  {%- endif -%}
+                </td>
+              {%- endfor -%}
+            </tr>
+          {%- endif -%}
+          {%- for row in row_blocks -%}
+            <tr {{ row.shopify_attributes }}>
+              <th scope="row">{{ row.settings.label | escape }}</th>
+              {%- for block in product_blocks -%}
+                {%- liquid
+                  assign value_key = 'value_' | append: forloop.index
+                  assign value = row.settings[value_key]
+                -%}
+                <td>{{ value | escape }}</td>
+              {%- endfor -%}
+            </tr>
+          {%- endfor -%}
+        </tbody>
+      </table>
+    </div>
+  {%- endif -%}
+</section>
+
+{% stylesheet %}
+  .sk-compare { padding: 2rem 1.25rem; }
+  .sk-compare__heading { margin: 0 0 1rem; }
+  .sk-compare__scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .sk-compare__scroll:focus-visible { outline: 3px solid #111; outline-offset: 2px; }
+  .sk-compare__table { width: 100%; min-width: 34rem; border-collapse: collapse; text-align: center; }
+  .sk-compare__table th, .sk-compare__table td { padding: .75rem; border-bottom: 1px solid rgba(0, 0, 0, .12); vertical-align: middle; }
+  .sk-compare__table tbody th { text-align: start; font-weight: 600; position: sticky; inset-inline-start: 0; background: #fff; }
+  .sk-compare__col { position: relative; min-width: 9rem; }
+  .sk-compare__col.is-highlight { background: rgba(0, 0, 0, .04); }
+  .sk-compare__img { display: block; margin: 0 auto .5rem; max-width: 120px; height: auto; }
+  .sk-compare__badge { display: inline-block; margin-bottom: .4rem; padding: .1rem .6rem; font-size: .75rem; background: #111; color: #fff; border-radius: 999px; }
+  .visually-hidden { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Product comparison table",
+  "tag": "section",
+  "class": "sk-section",
+  "settings": [
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Compare products" },
+    { "type": "checkbox", "id": "show_price", "label": "Show price row", "default": true },
+    { "type": "checkbox", "id": "show_availability", "label": "Show availability row", "default": true }
+  ],
+  "blocks": [
+    {
+      "type": "product",
+      "name": "Product column",
+      "limit": 4,
+      "settings": [
+        { "type": "product", "id": "product", "label": "Product" },
+        { "type": "text", "id": "badge", "label": "Badge", "info": "For example: Best value." },
+        { "type": "checkbox", "id": "highlight", "label": "Highlight column", "default": false }
+      ]
+    },
+    {
+      "type": "row",
+      "name": "Feature row",
+      "limit": 20,
+      "settings": [
+        { "type": "text", "id": "label", "label": "Feature", "default": "Material" },
+        { "type": "text", "id": "value_1", "label": "Value for product 1", "info": "Values follow the order of the product columns." },
+        { "type": "text", "id": "value_2", "label": "Value for product 2" },
+        { "type": "text", "id": "value_3", "label": "Value for product 3" },
+        { "type": "text", "id": "value_4", "label": "Value for product 4" }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Product comparison table",
+      "blocks": [
+        { "type": "product" },
+        { "type": "product" },
+        { "type": "row", "settings": { "label": "Material", "value_1": "Cotton", "value_2": "Linen" } },
+        { "type": "row", "settings": { "label": "Warranty", "value_1": "None", "value_2": "6 months" } }
+      ]
+    }
+  ]
+}
+{% endschema %}

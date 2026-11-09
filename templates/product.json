@@ -1,0 +1,7 @@
+{
+  "sections": {
+    "main": { "type": "main-product-demo", "settings": {} },
+    "extras": { "type": "product-extras", "settings": {} }
+  },
+  "order": ["main", "extras"]
+}

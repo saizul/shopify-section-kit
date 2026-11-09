@@ -1,0 +1,9 @@
+{
+  "sections": {
+    "hero": { "type": "hero-media", "settings": {} },
+    "usp": { "type": "usp-bar", "settings": {} },
+    "faq": { "type": "faq-accordion", "settings": {} },
+    "testimonials": { "type": "testimonial-slider", "settings": {} }
+  },
+  "order": ["hero", "usp", "testimonials", "faq"]
+}

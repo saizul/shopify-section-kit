@@ -1,0 +1,105 @@
+{%- comment -%}
+  "Order on WhatsApp" button for product pages. Builds a wa.me link containing the
+  product title, selected variant and product URL, and keeps it in sync when the
+  customer changes variant.
+  Accepts:
+  - product: product object (required)
+  - phone: WhatsApp number in international format, digits only (e.g. 8801XXXXXXXXX)
+  - label: button text (optional)
+  - message: message template (optional). Tokens: {product} {variant} {price} {url}
+  Usage: {% render 'whatsapp-order-button', product: product, phone: '8801XXXXXXXXX' %}
+{%- endcomment -%}
+{%- liquid
+  assign wa_phone = phone | remove: '+' | remove: ' ' | remove: '-' | strip
+  assign wa_label = label | default: 'products.whatsapp.button' | t
+  assign wa_template = message | default: 'products.whatsapp.message' | t
+  assign wa_variant = product.selected_or_first_available_variant
+  assign wa_base = shop.url | append: product.url
+-%}
+
+{%- if product != blank and wa_phone != blank -%}
+  {%- liquid
+    assign wa_variant_title = wa_variant.title
+    if product.has_only_default_variant
+      assign wa_variant_title = ''
+    endif
+    assign wa_price = wa_variant.price | money_without_currency | strip_html
+    assign wa_url = wa_base
+    unless product.has_only_default_variant
+      assign wa_url = wa_base | append: '?variant=' | append: wa_variant.id
+    endunless
+    assign wa_text = wa_template | replace: '{product}', product.title | replace: '{variant}', wa_variant_title | replace: '{price}', wa_price | replace: '{url}', wa_url
+  -%}
+
+  <a
+    class="sk-wa-button"
+    href="https://wa.me/{{ wa_phone }}?text={{ wa_text | url_encode }}"
+    target="_blank"
+    rel="noopener noreferrer"
+    data-sk-wa
+    data-phone="{{ wa_phone }}"
+    data-template="{{ wa_template | escape }}"
+    data-product="{{ product.title | escape }}"
+    data-base-url="{{ wa_base }}"
+    data-single="{{ product.has_only_default_variant }}"
+    data-currency="{{ cart.currency.iso_code }}"
+  >
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 20l1.2-4.1A8 8 0 1 1 8.300 18.900z"></path><path d="M9 9.500c.5 2 2.500 4 5 5l1.200-1.200-1.800-1-.9.700a4 4 0 0 1-1.800-1.800l.7-.9-1-1.800z"></path></svg>
+    <span>{{ wa_label | escape }}</span>
+  </a>
+
+  <script type="application/json" data-sk-wa-variants>
+    {
+      "variants": [
+        {%- for v in product.variants -%}
+          {
+            "id": {{ v.id }},
+            "title": {{ v.title | json }},
+            "price": {{ v.price | money_without_currency | strip_html | json }}
+          }{% unless forloop.last %},{% endunless %}
+        {%- endfor -%}
+      ]
+    }
+  </script>
+{%- endif -%}
+
+{% stylesheet %}
+  .sk-wa-button { display: inline-flex; align-items: center; justify-content: center; gap: .6rem; width: 100%; min-height: 48px; padding: .75rem 1.25rem; background: #128c4a; color: #fff; border-radius: 4px; font-weight: 600; text-decoration: none; }
+  .sk-wa-button:hover { background: #0f7a40; }
+  .sk-wa-button:focus-visible { outline: 3px solid #111; outline-offset: 2px; }
+{% endstylesheet %}
+
+{% javascript %}
+  (function () {
+    var button = document.querySelector('[data-sk-wa]');
+    var dataNode = document.querySelector('[data-sk-wa-variants]');
+    if (!button || !dataNode) return;
+
+    var variants = [];
+    try { variants = JSON.parse(dataNode.textContent).variants; } catch (e) { return; }
+
+    function currentVariantId() {
+      var input = document.querySelector('form[action*="/cart/add"] [name="id"]');
+      if (input && input.value) return input.value;
+      return new URLSearchParams(window.location.search).get('variant');
+    }
+
+    function update() {
+      var id = currentVariantId();
+      var variant = variants.filter(function (v) { return String(v.id) === String(id); })[0];
+      if (!variant) return;
+      var single = button.dataset.single === 'true';
+      var url = single ? button.dataset.baseUrl : button.dataset.baseUrl + '?variant=' + variant.id;
+      var text = button.dataset.template
+        .split('{product}').join(button.dataset.product)
+        .split('{variant}').join(single ? '' : variant.title)
+        .split('{price}').join(variant.price)
+        .split('{url}').join(url);
+      button.href = 'https://wa.me/' + button.dataset.phone + '?text=' + encodeURIComponent(text);
+    }
+
+    document.addEventListener('change', update);
+    document.addEventListener('variant:change', update);
+    window.addEventListener('popstate', update);
+  })();
+{% endjavascript %}

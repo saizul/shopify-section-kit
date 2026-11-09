@@ -1,0 +1,47 @@
+{%- comment -%}
+  Product page helpers: "Order on WhatsApp" button and size guide modal.
+  Add this section to the product template, below the buy buttons.
+{%- endcomment -%}
+<div class="sk-extras page-width">
+  {%- if section.settings.show_whatsapp and section.settings.phone != blank -%}
+    {% render 'whatsapp-order-button',
+      product: product,
+      phone: section.settings.phone,
+      label: section.settings.whatsapp_label,
+      message: section.settings.message
+    %}
+  {%- endif -%}
+
+  {%- if section.settings.size_guide_page != blank -%}
+    {% render 'size-guide-modal',
+      page: section.settings.size_guide_page,
+      button_label: section.settings.size_guide_label
+    %}
+  {%- endif -%}
+</div>
+
+{% stylesheet %}
+  .sk-extras { display: grid; gap: .5rem; padding: .5rem 1.25rem; max-width: 40rem; }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Product extras",
+  "tag": "section",
+  "class": "sk-section",
+  "enabled_on": { "templates": ["product"] },
+  "settings": [
+    { "type": "header", "content": "Order on WhatsApp" },
+    { "type": "checkbox", "id": "show_whatsapp", "label": "Show WhatsApp button", "default": true },
+    { "type": "text", "id": "phone", "label": "WhatsApp number", "info": "International format, digits only. Example: 8801XXXXXXXXX" },
+    { "type": "text", "id": "whatsapp_label", "label": "Button label" },
+    { "type": "textarea", "id": "message", "label": "Message template", "info": "Tokens: {product} {variant} {price} {url}. Leave blank for the default message." },
+    { "type": "header", "content": "Size guide" },
+    { "type": "page", "id": "size_guide_page", "label": "Size guide page", "info": "The page content (usually a table) opens in a modal." },
+    { "type": "text", "id": "size_guide_label", "label": "Size guide button label" }
+  ],
+  "presets": [
+    { "name": "Product extras" }
+  ]
+}
+{% endschema %}

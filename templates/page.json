@@ -1,0 +1,7 @@
+{
+  "sections": {
+    "main": { "type": "main-page-demo", "settings": {} },
+    "compare": { "type": "comparison-table", "settings": {} }
+  },
+  "order": ["main", "compare"]
+}

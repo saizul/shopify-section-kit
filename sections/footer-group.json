@@ -1,0 +1,8 @@
+{
+  "name": "Footer group",
+  "type": "footer",
+  "sections": {
+    "badges": { "type": "trust-badges", "blocks": { "cod": { "type": "text_badge", "settings": { "text": "Cash on Delivery" } } }, "block_order": ["cod"], "settings": {} }
+  },
+  "order": ["badges"]
+}

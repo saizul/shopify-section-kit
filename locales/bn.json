@@ -1,0 +1,48 @@
+{
+  "general": {
+    "page": "পৃষ্ঠা {{ page }}"
+  },
+  "products": {
+    "product": {
+      "add_to_cart": "কার্টে যোগ করুন"
+    },
+    "whatsapp": {
+      "button": "হোয়াটসঅ্যাপে অর্ডার করুন",
+      "message": "হ্যালো, আমি অর্ডার করতে চাই:\n{product} {variant}\nদাম: {price}\n{url}"
+    },
+    "size_guide": {
+      "title": "সাইজ গাইড",
+      "button": "সাইজ গাইড",
+      "close": "সাইজ গাইড বন্ধ করুন"
+    }
+  },
+  "sections": {
+    "hero": {
+      "pause_video": "ব্যাকগ্রাউন্ড ভিডিও থামান",
+      "play_video": "ব্যাকগ্রাউন্ড ভিডিও চালু করুন"
+    },
+    "usp": {
+      "label": "স্টোরের সুবিধা"
+    },
+    "comparison": {
+      "no_product": "একটি পণ্য নির্বাচন করুন",
+      "price": "দাম",
+      "availability": "স্টক",
+      "in_stock": "স্টকে আছে",
+      "sold_out": "স্টক শেষ"
+    },
+    "countdown": {
+      "label": "ঘোষণা",
+      "days": "দিন",
+      "hours": "ঘণ্টা",
+      "minutes": "মিনিট",
+      "seconds": "সেকেন্ড",
+      "dismiss": "ঘোষণা বন্ধ করুন"
+    },
+    "testimonials": {
+      "previous": "আগের মতামত",
+      "next": "পরের মতামত",
+      "rating": "৫ এর মধ্যে {{ rating }} রেটিং"
+    }
+  }
+}

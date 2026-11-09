@@ -1,0 +1,127 @@
+<section
+  class="sk-testi page-width"
+  aria-roledescription="carousel"
+  aria-label="{{ section.settings.heading | default: 'Testimonials' | escape }}"
+  data-sk-testi
+>
+  <div class="sk-testi__head">
+    {%- if section.settings.heading != blank -%}
+      <h2 class="sk-testi__heading">{{ section.settings.heading | escape }}</h2>
+    {%- endif -%}
+    {%- if section.blocks.size > 1 -%}
+      <div class="sk-testi__nav">
+        <button type="button" class="sk-testi__btn" data-sk-testi-prev aria-label="{{ 'sections.testimonials.previous' | t }}">&larr;</button>
+        <button type="button" class="sk-testi__btn" data-sk-testi-next aria-label="{{ 'sections.testimonials.next' | t }}">&rarr;</button>
+      </div>
+    {%- endif -%}
+  </div>
+
+  <ul class="sk-testi__track" data-sk-testi-track tabindex="0">
+    {%- for block in section.blocks -%}
+      <li
+        class="sk-testi__slide"
+        role="group"
+        aria-roledescription="slide"
+        aria-label="{{ forloop.index }} / {{ forloop.length }}"
+        {{ block.shopify_attributes }}
+      >
+        <figure class="sk-testi__card">
+          {%- if block.settings.rating > 0 -%}
+            <p class="sk-testi__stars">
+              <span aria-hidden="true">{% for i in (1..block.settings.rating) %}&#9733;{% endfor %}</span>
+              <span class="visually-hidden">{{ 'sections.testimonials.rating' | t: rating: block.settings.rating }}</span>
+            </p>
+          {%- endif -%}
+          <blockquote class="sk-testi__quote">{{ block.settings.quote }}</blockquote>
+          <figcaption class="sk-testi__author">
+            {%- if block.settings.avatar != blank -%}
+              {{ block.settings.avatar | image_url: width: 96 | image_tag: loading: 'lazy', width: 48, height: 48, class: 'sk-testi__avatar', alt: '' }}
+            {%- endif -%}
+            <span>
+              <strong>{{ block.settings.name | escape }}</strong>
+              {%- if block.settings.location != blank %}<br>{{ block.settings.location | escape }}{% endif -%}
+            </span>
+          </figcaption>
+        </figure>
+      </li>
+    {%- endfor -%}
+  </ul>
+</section>
+
+{% stylesheet %}
+  .sk-testi { padding: 2rem 1.25rem; }
+  .sk-testi__head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; }
+  .sk-testi__heading { margin: 0; }
+  .sk-testi__nav { display: none; gap: .5rem; }
+  .sk-testi__btn { width: 44px; height: 44px; border: 1px solid currentColor; border-radius: 50%; background: transparent; color: inherit; font-size: 1.1rem; cursor: pointer; }
+  .sk-testi__track { list-style: none; margin: 0; padding: 0 0 .75rem; display: grid; grid-auto-flow: column; grid-auto-columns: 88%; gap: 1rem; overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth; overscroll-behavior-x: contain; scrollbar-width: thin; }
+  .sk-testi__track:focus-visible, .sk-testi__btn:focus-visible { outline: 3px solid #111; outline-offset: 2px; }
+  .sk-testi__slide { scroll-snap-align: start; }
+  .sk-testi__card { height: 100%; margin: 0; padding: 1.25rem; border: 1px solid rgba(0, 0, 0, .15); border-radius: 8px; display: flex; flex-direction: column; gap: .75rem; }
+  .sk-testi__stars { margin: 0; color: #c98900; letter-spacing: .1em; }
+  .sk-testi__quote { margin: 0; line-height: 1.6; flex: 1; }
+  .sk-testi__author { display: flex; align-items: center; gap: .75rem; font-size: .9rem; }
+  .sk-testi__avatar { border-radius: 50%; object-fit: cover; }
+  @media (min-width: 750px) {
+    .sk-testi__nav { display: flex; }
+    .sk-testi__track { grid-auto-columns: calc((100% - 2rem) / 3); }
+  }
+  .sk-testi .visually-hidden { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  @media (prefers-reduced-motion: reduce) { .sk-testi__track { scroll-behavior: auto; } }
+{% endstylesheet %}
+
+{% javascript %}
+  (function () {
+    document.querySelectorAll('[data-sk-testi]').forEach(function (root) {
+      var track = root.querySelector('[data-sk-testi-track]');
+      var prev = root.querySelector('[data-sk-testi-prev]');
+      var next = root.querySelector('[data-sk-testi-next]');
+      if (!track) return;
+
+      function step() {
+        var slide = track.querySelector('li');
+        return slide ? slide.getBoundingClientRect().width + 16 : track.clientWidth;
+      }
+      if (prev) prev.addEventListener('click', function () { track.scrollBy({ left: -step() }); });
+      if (next) next.addEventListener('click', function () { track.scrollBy({ left: step() }); });
+      track.addEventListener('keydown', function (e) {
+        if (e.key === 'ArrowRight') { track.scrollBy({ left: step() }); e.preventDefault(); }
+        if (e.key === 'ArrowLeft') { track.scrollBy({ left: -step() }); e.preventDefault(); }
+      });
+    });
+  })();
+{% endjavascript %}
+
+{% schema %}
+{
+  "name": "Testimonial slider",
+  "tag": "section",
+  "class": "sk-section",
+  "settings": [
+    { "type": "text", "id": "heading", "label": "Heading", "default": "What customers say" }
+  ],
+  "blocks": [
+    {
+      "type": "testimonial",
+      "name": "Testimonial",
+      "settings": [
+        { "type": "textarea", "id": "quote", "label": "Quote", "default": "Great quality and the delivery was faster than expected." },
+        { "type": "text", "id": "name", "label": "Name", "default": "Customer name" },
+        { "type": "text", "id": "location", "label": "Location", "default": "Dhaka" },
+        { "type": "image_picker", "id": "avatar", "label": "Photo" },
+        { "type": "range", "id": "rating", "label": "Rating", "min": 0, "max": 5, "step": 1, "default": 5, "info": "0 hides the stars." }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Testimonial slider",
+      "blocks": [
+        { "type": "testimonial" },
+        { "type": "testimonial", "settings": { "name": "Another customer", "location": "Chattogram" } },
+        { "type": "testimonial", "settings": { "name": "Third customer", "location": "Sylhet" } }
+      ]
+    }
+  ]
+}
+{% endschema %}

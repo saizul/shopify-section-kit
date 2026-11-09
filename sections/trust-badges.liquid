@@ -1,0 +1,93 @@
+<section class="sk-trust page-width" style="--sk-trust-align: {{ section.settings.align }};">
+  {%- if section.settings.heading != blank -%}
+    <h2 class="sk-trust__heading">{{ section.settings.heading | escape }}</h2>
+  {%- endif -%}
+
+  <ul class="sk-trust__list{% if section.settings.grayscale %} sk-trust__list--gray{% endif %}">
+    {%- for block in section.blocks -%}
+      {%- case block.type -%}
+        {%- when 'image_badge' -%}
+          {%- if block.settings.image != blank -%}
+            <li class="sk-trust__item" {{ block.shopify_attributes }}>
+              {{
+                block.settings.image
+                | image_url: width: 240
+                | image_tag:
+                  loading: 'lazy',
+                  height: section.settings.badge_height,
+                  class: 'sk-trust__img',
+                  alt: block.settings.alt
+              }}
+            </li>
+          {%- endif -%}
+        {%- when 'text_badge' -%}
+          {%- if block.settings.text != blank -%}
+            <li class="sk-trust__item sk-trust__item--text" {{ block.shopify_attributes }}>
+              <span class="sk-trust__chip">{{ block.settings.text | escape }}</span>
+            </li>
+          {%- endif -%}
+      {%- endcase -%}
+    {%- endfor -%}
+  </ul>
+
+  {%- if section.settings.note != blank -%}
+    <div class="sk-trust__note rte">{{ section.settings.note }}</div>
+  {%- endif -%}
+</section>
+
+{% stylesheet %}
+  .sk-trust { padding: 1.5rem 1.25rem; text-align: var(--sk-trust-align, center); }
+  .sk-trust__heading { margin: 0 0 1rem; font-size: 1.1rem; }
+  .sk-trust__list { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: .6rem; justify-content: var(--sk-trust-align, center); align-items: center; }
+  .sk-trust__list--gray .sk-trust__img { filter: grayscale(1); opacity: .8; }
+  .sk-trust__img { width: auto; max-width: 100%; display: block; }
+  .sk-trust__chip { display: inline-flex; align-items: center; min-height: 36px; padding: .3rem .85rem; border: 1px solid currentColor; border-radius: 999px; font-size: .85rem; font-weight: 600; }
+  .sk-trust__note { margin-top: .75rem; font-size: .85rem; opacity: .8; }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Trust and payment badges",
+  "tag": "section",
+  "class": "sk-section",
+  "settings": [
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Secure checkout" },
+    { "type": "select", "id": "align", "label": "Alignment", "options": [
+      { "value": "left", "label": "Left" },
+      { "value": "center", "label": "Center" }
+    ], "default": "center" },
+    { "type": "range", "id": "badge_height", "label": "Image badge height", "min": 20, "max": 60, "step": 4, "unit": "px", "default": 32 },
+    { "type": "checkbox", "id": "grayscale", "label": "Show image badges in grayscale", "default": false },
+    { "type": "richtext", "id": "note", "label": "Note", "info": "For example: We never store card details." }
+  ],
+  "blocks": [
+    {
+      "type": "image_badge",
+      "name": "Image badge",
+      "settings": [
+        { "type": "image_picker", "id": "image", "label": "Badge image", "info": "Upload your own logo files. Make sure you have the right to use each brand mark." },
+        { "type": "text", "id": "alt", "label": "Alt text", "default": "Accepted payment method" }
+      ]
+    },
+    {
+      "type": "text_badge",
+      "name": "Text badge",
+      "settings": [
+        { "type": "text", "id": "text", "label": "Text", "default": "Cash on Delivery", "info": "Ideal for local methods such as bKash, Nagad, Rocket or COD." }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Trust and payment badges",
+      "blocks": [
+        { "type": "text_badge", "settings": { "text": "Cash on Delivery" } },
+        { "type": "text_badge", "settings": { "text": "bKash" } },
+        { "type": "text_badge", "settings": { "text": "Nagad" } },
+        { "type": "text_badge", "settings": { "text": "Visa / Mastercard" } },
+        { "type": "text_badge", "settings": { "text": "7-day returns" } }
+      ]
+    }
+  ]
+}
+{% endschema %}

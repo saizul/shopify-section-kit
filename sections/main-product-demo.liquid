@@ -1,0 +1,37 @@
+{%- comment -%}
+  Minimal product section so `shopify theme dev` can render a product page for
+  testing the kit. Replace it with your theme's real product section.
+{%- endcomment -%}
+{%- liquid
+  assign current_variant = product.selected_or_first_available_variant
+-%}
+<section class="page-width sk-demo-product">
+  <h1>{{ product.title | escape }}</h1>
+  <p>{{ current_variant.price | money }}</p>
+  {%- form 'product', product, id: 'sk-demo-product-form' -%}
+    {%- if product.has_only_default_variant == false -%}
+      <label for="sk-demo-variant">{{ product.options_with_values.first.name | escape }}</label>
+      <select id="sk-demo-variant" name="id">
+        {%- for variant in product.variants -%}
+          <option value="{{ variant.id }}" {% if variant == current_variant %}selected{% endif %}>{{ variant.title | escape }}</option>
+        {%- endfor -%}
+      </select>
+    {%- else -%}
+      <input type="hidden" name="id" value="{{ current_variant.id }}">
+    {%- endif -%}
+    <button type="submit" {% unless current_variant.available %}disabled{% endunless %}>
+      {{ 'products.product.add_to_cart' | t }}
+    </button>
+  {%- endform -%}
+  {% content_for 'blocks' %}
+</section>
+
+{% schema %}
+{
+  "name": "Product (demo)",
+  "tag": "section",
+  "class": "sk-section",
+  "settings": [],
+  "blocks": [{ "type": "@app" }]
+}
+{% endschema %}
