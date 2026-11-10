@@ -2,6 +2,12 @@
 
 All notable changes are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+
+- Product FAQ section: per-product questions from the `custom.faq` JSON metafield, store-wide questions as blocks, native `<details>` accordion and optional FAQPage JSON-LD. Documented in `docs/product-faq.md`.
+
 ## [1.0.0] - 2026-11-09
 
 ### Added
