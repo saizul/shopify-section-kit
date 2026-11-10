@@ -1,0 +1,169 @@
+{%- comment -%}
+  Per-product FAQ. Questions come from the product metafield custom.faq (type: JSON), so each
+  product can have its own. Optional blocks add store-wide questions shown after them.
+
+  Metafield value example:
+  [{ "question": "Is it machine washable?", "answer": "Yes, at 30 degrees." }]
+{%- endcomment -%}
+{%- liquid
+  assign faq_items = product.metafields.custom.faq.value
+  assign max_items = section.settings.max_items
+  assign group_name = 'sk-pfaq-' | append: section.id
+  assign has_items = false
+  if faq_items.size > 0
+    assign has_items = true
+  endif
+  if section.blocks.size > 0
+    assign has_items = true
+  endif
+-%}
+
+{%- if has_items -%}
+  <section class="sk-pfaq page-width" style="--sk-pfaq-accent: {{ section.settings.accent }};">
+    {%- if section.settings.heading != blank -%}
+      <h2 class="sk-pfaq__heading">{{ section.settings.heading | escape }}</h2>
+    {%- endif -%}
+
+    <div class="sk-pfaq__list">
+      {%- assign shown = 0 -%}
+      {%- for item in faq_items -%}
+        {%- if shown >= max_items -%}{%- break -%}{%- endif -%}
+        {%- if item.question != blank and item.answer != blank -%}
+          <details
+            class="sk-pfaq__item"
+            {% if section.settings.single_open %}
+              name="{{ group_name }}"
+            {% endif %}
+            {% if shown == 0 and section.settings.open_first %}
+              open
+            {% endif %}
+          >
+            <summary class="sk-pfaq__question">{{ item.question | strip_html | escape }}</summary>
+            <div class="sk-pfaq__answer">{{ item.answer | strip_html | escape | newline_to_br }}</div>
+          </details>
+          {%- assign shown = shown | plus: 1 -%}
+        {%- endif -%}
+      {%- endfor -%}
+
+      {%- for block in section.blocks -%}
+        {%- if shown >= max_items -%}{%- break -%}{%- endif -%}
+        {%- if block.settings.question != blank and block.settings.answer != blank -%}
+          <details
+            class="sk-pfaq__item"
+            {% if section.settings.single_open %}
+              name="{{ group_name }}"
+            {% endif %}
+            {% if shown == 0 and section.settings.open_first %}
+              open
+            {% endif %}
+            {{ block.shopify_attributes }}
+          >
+            <summary class="sk-pfaq__question">{{ block.settings.question | escape }}</summary>
+            <div class="sk-pfaq__answer rte">{{ block.settings.answer }}</div>
+          </details>
+          {%- assign shown = shown | plus: 1 -%}
+        {%- endif -%}
+      {%- endfor -%}
+    </div>
+  </section>
+
+  {%- comment -%} FAQPage structured data: only printed when the merchant enables it. {%- endcomment -%}
+  {%- if section.settings.enable_schema and shown > 0 -%}
+    {%- assign sk_pfaq_started = false -%}
+    {%- assign emitted = 0 -%}
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+          {%- for item in faq_items -%}
+            {%- if emitted >= max_items -%}{%- break -%}{%- endif -%}
+            {%- if item.question != blank and item.answer != blank -%}
+              {%- if sk_pfaq_started %},{% endif -%}
+              {
+                "@type": "Question",
+                "name": {{ item.question | strip_html | json }},
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": {{ item.answer | strip_html | json }}
+                }
+              }
+              {%- assign sk_pfaq_started = true -%}
+              {%- assign emitted = emitted | plus: 1 -%}
+            {%- endif -%}
+          {%- endfor -%}
+          {%- for block in section.blocks -%}
+            {%- if emitted >= max_items -%}{%- break -%}{%- endif -%}
+            {%- if block.settings.question != blank and block.settings.answer != blank -%}
+              {%- if sk_pfaq_started %},{% endif -%}
+              {
+                "@type": "Question",
+                "name": {{ block.settings.question | strip_html | json }},
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": {{ block.settings.answer | json }}
+                }
+              }
+              {%- assign sk_pfaq_started = true -%}
+              {%- assign emitted = emitted | plus: 1 -%}
+            {%- endif -%}
+          {%- endfor -%}
+        ]
+      }
+    </script>
+  {%- endif -%}
+{%- elsif request.design_mode -%}
+  <div class="sk-pfaq page-width">
+    <p class="sk-pfaq__empty">Product FAQ: add a JSON metafield custom.faq to this product, or add store-wide questions as blocks.</p>
+  </div>
+{%- endif -%}
+
+{% stylesheet %}
+  .sk-pfaq { max-width: 50rem; margin: 0 auto; padding: 2rem 1.25rem; }
+  .sk-pfaq__heading { margin: 0 0 1rem; font-size: 1.6rem; }
+  .sk-pfaq__item { border-bottom: 1px solid rgba(0, 0, 0, .15); }
+  .sk-pfaq__question { display: flex; justify-content: space-between; align-items: center; gap: 1rem; min-height: 48px; padding: .9rem 0; font-weight: 600; cursor: pointer; list-style: none; }
+  .sk-pfaq__question::-webkit-details-marker { display: none; }
+  .sk-pfaq__question::after { content: '+'; flex: none; font-size: 1.4rem; line-height: 1; color: var(--sk-pfaq-accent, #111); }
+  .sk-pfaq__item[open] > .sk-pfaq__question::after { content: '\2212'; }
+  .sk-pfaq__question:focus-visible { outline: 3px solid var(--sk-pfaq-accent, #111); outline-offset: 2px; }
+  .sk-pfaq__answer { padding: 0 0 1rem; line-height: 1.6; }
+  .sk-pfaq__answer > :first-child { margin-top: 0; }
+  .sk-pfaq__empty { padding: 1rem; border: 1px dashed rgba(0, 0, 0, .3); color: rgba(0, 0, 0, .6); }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Product FAQ",
+  "tag": "section",
+  "class": "sk-section",
+  "enabled_on": { "templates": ["product"] },
+  "settings": [
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Questions about this product" },
+    { "type": "range", "id": "max_items", "label": "Maximum questions", "min": 3, "max": 20, "step": 1, "default": 10 },
+    { "type": "checkbox", "id": "open_first", "label": "Open the first question", "default": false },
+    { "type": "checkbox", "id": "single_open", "label": "Only one question open at a time", "default": false },
+    { "type": "color", "id": "accent", "label": "Accent color", "default": "#111111" },
+    { "type": "header", "content": "SEO" },
+    { "type": "checkbox", "id": "enable_schema", "label": "Output FAQPage JSON-LD", "default": false, "info": "Only enable when the questions are visible on this page and not duplicated by another FAQ markup on the same page." }
+  ],
+  "blocks": [
+    {
+      "type": "question",
+      "name": "Store-wide question",
+      "settings": [
+        { "type": "text", "id": "question", "label": "Question", "default": "Do you offer cash on delivery?" },
+        { "type": "richtext", "id": "answer", "label": "Answer", "default": "<p>Yes. COD is available in most areas.</p>" }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Product FAQ",
+      "blocks": [
+        { "type": "question" }
+      ]
+    }
+  ]
+}
+{% endschema %}

@@ -14,6 +14,7 @@ Built with South Asian merchants in mind: Bangla (`bn`) translations, a Banglade
 | [Hero (video / image)](docs/hero-media.md) | section | Background video or image, heading, buttons, reduced-motion aware |
 | [USP bar](docs/usp-bar.md) | section | Scroll-snap strip on mobile, grid on desktop, inline SVG icons |
 | [FAQ accordion](docs/faq-accordion.md) | section | Native `<details>`; prints FAQPage JSON-LD only when enabled |
+| [Product FAQ](docs/product-faq.md) | section | Per-product questions from a `custom.faq` JSON metafield plus store-wide blocks; optional FAQPage JSON-LD |
 | [Trust and payment badges](docs/trust-badges.md) | section | Your own images plus text badges (bKash, Nagad, COD) |
 | [Product comparison table](docs/comparison-table.md) | section | Up to 4 products, custom feature rows, accessible table |
 | [Countdown bar](docs/announcement-countdown.md) | section | Announcement bar with timezone-aware countdown |
