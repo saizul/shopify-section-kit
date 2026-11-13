@@ -19,6 +19,8 @@ jobs:
           cache: npm
       - name: Install dependencies
         run: npm install --no-audit --no-fund
-      # Uses @shopify/theme-check-node (the same engine as `shopify theme check`).
-      - name: Run Theme Check
+      - name: Test kit lint
+        run: npm test
+      # Kit lint (scripts/kit-lint.mjs), then @shopify/theme-check-node (the same engine as `shopify theme check`).
+      - name: Run kit lint and Theme Check
         run: npm run check

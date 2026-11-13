@@ -6,6 +6,7 @@
 | USP bar | section | [usp-bar.md](usp-bar.md) |
 | FAQ accordion + FAQPage JSON-LD | section | [faq-accordion.md](faq-accordion.md) |
 | Product FAQ (metafield driven) | section | [product-faq.md](product-faq.md) |
+| Stock urgency bar (low stock) | section | [stock-urgency.md](stock-urgency.md) |
 | Trust and payment badges | section | [trust-badges.md](trust-badges.md) |
 | Product comparison table | section | [comparison-table.md](comparison-table.md) |
 | Countdown bar | section | [announcement-countdown.md](announcement-countdown.md) |

@@ -29,7 +29,7 @@ npm install -g @shopify/cli   # once
 shopify theme dev --store your-store.myshopify.com
 ```
 
-Open the preview URL, then open the theme editor and add sections. The home page template already uses the hero, USP bar, testimonials and FAQ; the product template uses the product extras section; the page template uses the comparison table.
+Open the preview URL, then open the theme editor and add sections. The home page template already uses the hero, USP bar, testimonials and FAQ; the product template uses the stock urgency bar, product extras and product FAQ sections; the page template uses the comparison table.
 
 ## Run Theme Check locally
 
@@ -38,7 +38,7 @@ npm install
 npm run check
 ```
 
-The script uses `@shopify/theme-check-node`. You can also run `shopify theme check` from the Shopify CLI.
+`npm run check` runs the kit lint (`scripts/kit-lint.mjs`: schemas, translations in every locale, template references, docs coverage) and then Theme Check. The Theme Check script uses `@shopify/theme-check-node`. You can also run `shopify theme check` from the Shopify CLI.
 
 ## Translations
 

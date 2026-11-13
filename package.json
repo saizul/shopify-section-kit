@@ -7,7 +7,9 @@
   "author": "Saizul Amin (https://saizul.com)",
   "type": "module",
   "scripts": {
-    "check": "node scripts/theme-check.mjs",
+    "check": "node scripts/kit-lint.mjs && node scripts/theme-check.mjs",
+    "lint": "node scripts/kit-lint.mjs",
+    "test": "node --test test/kit-lint.test.mjs",
     "dev": "shopify theme dev"
   },
   "devDependencies": {

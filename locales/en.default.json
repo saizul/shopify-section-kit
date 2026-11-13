@@ -43,6 +43,15 @@
       "previous": "Previous testimonial",
       "next": "Next testimonial",
       "rating": "Rated {{ rating }} out of 5"
+    },
+    "stock_urgency": {
+      "low_stock": {
+        "one": "Hurry, only {{ count }} left in stock",
+        "other": "Hurry, only {{ count }} left in stock"
+      },
+      "in_stock": "In stock, ready to ship",
+      "backorder": "Available on backorder: ships when restocked",
+      "sold_out": "Sold out"
     }
   }
 }

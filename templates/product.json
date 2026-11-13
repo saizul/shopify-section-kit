@@ -2,7 +2,8 @@
   "sections": {
     "main": { "type": "main-product-demo", "settings": {} },
     "extras": { "type": "product-extras", "settings": {} },
+    "stock": { "type": "stock-urgency", "settings": {} },
     "faq": { "type": "product-faq", "settings": {} }
   },
-  "order": ["main", "extras", "faq"]
+  "order": ["main", "stock", "extras", "faq"]
 }
