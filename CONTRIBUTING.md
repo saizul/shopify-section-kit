@@ -28,7 +28,7 @@ To preview, run `shopify theme dev` with a development store.
 2. Add any new translation keys to both locale files.
 3. Add `docs/<name>.md` and link it from `docs/README.md` and the README table.
 4. Add an entry under "Unreleased" in `CHANGELOG.md`.
-5. Run `npm run check`; it must report 0 errors and 0 warnings.
+5. Run `npm run check` (kit lint + Theme Check) and `npm test`; both must pass with 0 errors and 0 warnings. The kit lint fails if a section has no docs page, a translation key is missing from any locale, or a template uses an unknown section.
 
 ## Pull requests
 

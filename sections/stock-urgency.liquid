@@ -1,0 +1,186 @@
+{%- comment -%}
+  Low-stock urgency bar for the product page. Shows "Only 3 left" with a small meter when the
+  selected variant's tracked inventory is at or below the threshold, and follows variant changes.
+
+  State per variant is computed in Liquid (so plural rules come from the locale files) and
+  printed as JSON; the script only swaps text and the meter width. Variants whose inventory is
+  not tracked by Shopify never show a count.
+
+  Variant changes are picked up from any `change` on an input or select named "id" inside a
+  product form, from `?variant=` in the URL, and from a custom event:
+    document.dispatchEvent(new CustomEvent('sk:variant-change', { detail: { variantId: 123 } }));
+{%- endcomment -%}
+{%- liquid
+  assign threshold = section.settings.threshold
+  assign current = product.selected_or_first_available_variant
+  assign current_state = 'hidden'
+  assign current_text = ''
+  assign current_pct = 0
+-%}
+
+{%- if product != blank -%}
+  {%- capture sk_stock_states -%}
+    {
+    {%- for variant in product.variants -%}
+      {%- liquid
+        assign state = 'hidden'
+        assign text = ''
+        assign pct = 0
+        assign qty = variant.inventory_quantity | default: 0
+        assign tracked = false
+        if variant.inventory_management == 'shopify'
+          assign tracked = true
+        endif
+
+        if variant.available == false
+          if section.settings.show_sold_out
+            assign state = 'sold_out'
+            assign text = 'sections.stock_urgency.sold_out' | t
+          endif
+        elsif tracked and qty <= 0
+          if section.settings.show_backorder
+            assign state = 'backorder'
+            assign text = 'sections.stock_urgency.backorder' | t
+          endif
+        elsif tracked and qty <= threshold
+          assign state = 'low'
+          assign text = 'sections.stock_urgency.low_stock' | t: count: qty
+          assign pct = qty | times: 100 | divided_by: threshold
+          if pct < 8
+            assign pct = 8
+          endif
+        elsif section.settings.show_in_stock
+          assign state = 'in_stock'
+          assign text = 'sections.stock_urgency.in_stock' | t
+          assign pct = 100
+        endif
+
+        if variant.id == current.id
+          assign current_state = state
+          assign current_text = text
+          assign current_pct = pct
+        endif
+      -%}
+      {%- unless forloop.first -%},{%- endunless -%}
+      "{{ variant.id }}": { "state": {{ state | json }}, "text": {{ text | json }}, "pct": {{ pct }} }
+    {%- endfor -%}
+    }
+  {%- endcapture -%}
+
+  <div
+    class="sk-stock page-width"
+    data-sk-stock
+    data-state="{{ current_state }}"
+    style="--sk-stock-low: {{ section.settings.low_color }}; --sk-stock-ok: {{ section.settings.ok_color }};"
+    {% if current_state == 'hidden' %}
+      hidden
+    {% endif %}
+  >
+    <p class="sk-stock__text" role="status" aria-live="polite" data-sk-stock-text>{{ current_text }}</p>
+    {%- if section.settings.show_meter -%}
+      <div class="sk-stock__meter" aria-hidden="true">
+        <span class="sk-stock__fill" data-sk-stock-fill style="width: {{ current_pct }}%;"></span>
+      </div>
+    {%- endif -%}
+    <script type="application/json" data-sk-stock-states>{{ sk_stock_states }}</script>
+  </div>
+{%- elsif request.design_mode -%}
+  <div class="sk-stock page-width">
+    <p class="sk-stock__empty">Stock urgency bar: add this section to a product template.</p>
+  </div>
+{%- endif -%}
+
+{% stylesheet %}
+  .sk-stock { max-width: 40rem; padding: .5rem 1.25rem; }
+  .sk-stock[hidden] { display: none; }
+  .sk-stock__text { margin: 0 0 .4rem; font-weight: 600; }
+  .sk-stock[data-state='low'] .sk-stock__text { color: var(--sk-stock-low, #b42318); }
+  .sk-stock__meter { height: .5rem; border-radius: 999px; background: rgba(0, 0, 0, .1); overflow: hidden; }
+  .sk-stock__fill { display: block; height: 100%; border-radius: inherit; background: var(--sk-stock-ok, #067647); transition: width .4s ease; }
+  .sk-stock[data-state='low'] .sk-stock__fill { background: var(--sk-stock-low, #b42318); }
+  .sk-stock[data-state='sold_out'] .sk-stock__meter,
+  .sk-stock[data-state='backorder'] .sk-stock__meter { display: none; }
+  .sk-stock__empty { padding: 1rem; border: 1px dashed rgba(0, 0, 0, .3); color: rgba(0, 0, 0, .6); }
+  @media (prefers-reduced-motion: reduce) {
+    .sk-stock__fill { transition: none; }
+  }
+{% endstylesheet %}
+
+{% javascript %}
+  (function () {
+    var bars = [];
+
+    function render(bar, variantId) {
+      var info = bar.skStates && bar.skStates[String(variantId)];
+      if (!info) return;
+      var text = bar.querySelector('[data-sk-stock-text]');
+      var fill = bar.querySelector('[data-sk-stock-fill]');
+      bar.dataset.state = info.state;
+      bar.hidden = info.state === 'hidden';
+      if (text && text.textContent !== info.text) text.textContent = info.text;
+      if (fill) fill.style.width = info.pct + '%';
+    }
+
+    function update(variantId) {
+      if (!variantId) return;
+      bars.forEach(function (bar) { render(bar, variantId); });
+    }
+
+    function init() {
+      document.querySelectorAll('[data-sk-stock]').forEach(function (bar) {
+        if (bar.skStates) return;
+        var data = bar.querySelector('[data-sk-stock-states]');
+        try {
+          bar.skStates = JSON.parse(data ? data.textContent : '{}');
+        } catch (e) {
+          bar.skStates = {};
+        }
+        bars.push(bar);
+      });
+      update(new URLSearchParams(window.location.search).get('variant'));
+    }
+
+    document.addEventListener('change', function (event) {
+      var field = event.target;
+      if (field && field.name === 'id' && field.closest('form[action*="/cart/add"]')) update(field.value);
+    });
+
+    document.addEventListener('sk:variant-change', function (event) {
+      update(event.detail && event.detail.variantId);
+    });
+
+    /* Theme editor: re-read the data after the section is re-rendered. */
+    document.addEventListener('shopify:section:load', function () {
+      bars = bars.filter(function (bar) { return bar.isConnected; });
+      init();
+    });
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
+  })();
+{% endjavascript %}
+
+{% schema %}
+{
+  "name": "Stock urgency bar",
+  "tag": "section",
+  "class": "sk-section",
+  "enabled_on": { "templates": ["product"] },
+  "settings": [
+    { "type": "range", "id": "threshold", "label": "Show the count at or below", "min": 1, "max": 50, "step": 1, "unit": "pcs", "default": 10, "info": "Only variants whose inventory is tracked by Shopify show a count." },
+    { "type": "checkbox", "id": "show_meter", "label": "Show stock meter", "default": true },
+    { "type": "checkbox", "id": "show_in_stock", "label": "Show a message when stock is above the threshold", "default": false },
+    { "type": "checkbox", "id": "show_backorder", "label": "Show a message for backorders", "default": true, "info": "For variants that keep selling when out of stock." },
+    { "type": "checkbox", "id": "show_sold_out", "label": "Show a message when sold out", "default": false },
+    { "type": "header", "content": "Colors" },
+    { "type": "color", "id": "low_color", "label": "Low stock", "default": "#b42318" },
+    { "type": "color", "id": "ok_color", "label": "In stock", "default": "#067647" }
+  ],
+  "presets": [
+    { "name": "Stock urgency bar" }
+  ]
+}
+{% endschema %}
